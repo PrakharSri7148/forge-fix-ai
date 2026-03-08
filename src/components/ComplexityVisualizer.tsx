@@ -33,7 +33,7 @@ const ComplexityVisualizer = () => {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
-            Complexity <span className="text-primary glow-text">Visualizer</span>
+            Complexity <span className="text-primary">Visualizer</span>
           </h2>
           <p className="text-muted-foreground text-lg">Complexity Graph — powered by FixForge ML</p>
         </motion.div>

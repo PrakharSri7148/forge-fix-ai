@@ -32,7 +32,7 @@ const FeaturesGrid = () => {
           className="text-center mb-20"
         >
           <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
-            Powerful <span className="text-primary glow-text">Features</span>
+            Powerful <span className="text-primary">Features</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-lg mx-auto">Everything you need to write better code, faster.</p>
         </motion.div>

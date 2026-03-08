@@ -30,7 +30,7 @@ const HowItWorks = () => {
           className="text-center mb-20"
         >
           <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
-            How It <span className="text-primary glow-text">Works</span>
+            How It <span className="text-primary">Works</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-md mx-auto">Three steps to better code.</p>
         </motion.div>

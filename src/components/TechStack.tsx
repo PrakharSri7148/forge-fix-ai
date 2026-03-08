@@ -21,7 +21,7 @@ const TechStack = () => {
           className="text-center mb-12"
         >
           <h2 className="text-3xl md:text-4xl font-extrabold mb-3">
-            Built With <span className="text-primary glow-text">Modern Tech</span>
+            Built With <span className="text-primary">Modern Tech</span>
           </h2>
         </motion.div>
 
