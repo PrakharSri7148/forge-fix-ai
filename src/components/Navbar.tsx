@@ -36,7 +36,7 @@ const Navbar = () => {
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <button onClick={() => navigate("/")} className="flex items-center gap-2.5 shrink-0">
-          <img src={fixforgeLogo} alt="FixForge" className="w-8 h-8" />
+          <img src={fixforgeLogo} alt="FixForge" className="w-10 h-10" />
           <span className="text-lg font-extrabold tracking-tight text-foreground">
             FIXFORGE
           </span>

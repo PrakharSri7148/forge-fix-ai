@@ -68,13 +68,11 @@ const Hero = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-8">
-              <Zap className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-mono text-primary tracking-wider uppercase">AI-Powered Debugging</span>
-            </div>
+
+
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight mb-6">
-              <span className="text-primary glow-text">FIXFORGE</span>
+              <span className="text-primary">FIXFORGE</span>
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-lg mb-8 leading-relaxed">
