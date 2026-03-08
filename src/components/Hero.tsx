@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const codeLines = [
   { text: 'function calculateTotal(items) {', color: 'text-forge-cyan' },
@@ -13,6 +14,7 @@ const codeLines = [
 ];
 
 const Hero = () => {
+  const navigate = useNavigate();
   const [visibleLines, setVisibleLines] = useState(0);
   const [showError, setShowError] = useState(false);
   const [showFix, setShowFix] = useState(false);
@@ -83,6 +85,7 @@ const Hero = () => {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => navigate("/analyzer")}
                 className="px-8 py-4 bg-primary text-primary-foreground font-bold rounded-lg glow-button text-base"
               >
                 Try It Now — Free
