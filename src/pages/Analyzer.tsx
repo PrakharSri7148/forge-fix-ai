@@ -44,7 +44,7 @@ const Analyzer = () => {
             <ArrowLeft className="w-5 h-5 text-muted-foreground" />
           </button>
           <h1 className="text-2xl font-bold tracking-tight">
-            <span className="text-primary glow-text">FIXFORGE</span>
+            <span className="text-primary">FIXFORGE</span>
             <span className="text-muted-foreground ml-3 text-base font-normal">Analyzer</span>
           </h1>
         </div>

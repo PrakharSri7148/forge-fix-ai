@@ -16,7 +16,7 @@ const CTAFooter = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-6xl font-extrabold mb-6">
-              Stop Debugging <span className="text-primary glow-text">Alone.</span>
+              Stop Debugging <span className="text-primary">Alone.</span>
             </h2>
             <p className="text-muted-foreground text-lg max-w-md mx-auto mb-10">
               Join thousands of developers shipping better code with FixForge.
