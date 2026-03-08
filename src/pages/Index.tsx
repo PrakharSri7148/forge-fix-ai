@@ -1,3 +1,4 @@
+import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
 import FeaturesGrid from "@/components/FeaturesGrid";
@@ -10,6 +11,7 @@ import CTAFooter from "@/components/CTAFooter";
 const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      <Navbar />
       <Hero />
       <HowItWorks />
       <FeaturesGrid />
