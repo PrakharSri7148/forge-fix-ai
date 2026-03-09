@@ -6,51 +6,51 @@
 
 @layer base {
   :root {
-    --background: 222 50% 7%;
+    --background: 0 0% 0%;
     --foreground: 210 40% 93%;
 
-    --card: 222 40% 10%;
+    --card: 0 0% 5%;
     --card-foreground: 210 40% 93%;
 
-    --popover: 222 40% 10%;
+    --popover: 0 0% 5%;
     --popover-foreground: 210 40% 93%;
 
-    --primary: 190 100% 50%;
-    --primary-foreground: 222 50% 7%;
+    --primary: 270 70% 60%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 20 100% 60%;
     --secondary-foreground: 222 50% 7%;
 
-    --muted: 222 30% 15%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 190 100% 50%;
-    --accent-foreground: 222 50% 7%;
+    --accent: 270 70% 60%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 222 30% 18%;
-    --input: 222 30% 18%;
-    --ring: 190 100% 50%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 270 70% 60%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 222 40% 8%;
+    --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 210 40% 93%;
-    --sidebar-primary: 190 100% 50%;
-    --sidebar-primary-foreground: 222 50% 7%;
-    --sidebar-accent: 222 30% 15%;
+    --sidebar-primary: 270 70% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
     --sidebar-accent-foreground: 210 40% 93%;
-    --sidebar-border: 222 30% 18%;
-    --sidebar-ring: 190 100% 50%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 270 70% 60%;
 
     /* Custom tokens */
     --forge-orange: 20 100% 60%;
-    --forge-cyan: 190 100% 50%;
-    --forge-navy: 222 50% 7%;
-    --forge-card: 222 40% 10%;
-    --forge-card-hover: 222 35% 13%;
+    --forge-cyan: 270 70% 60%; /* Changed to purple for consistency */
+    --forge-navy: 0 0% 0%;
+    --forge-card: 0 0% 5%;
+    --forge-card-hover: 0 0% 8%;
     --glow-cyan: 0 0% 100% / 0.05;
   }
 }
@@ -90,12 +90,11 @@
   }
 
   .glow-button {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.1);
     transition: all 0.3s ease;
   }
 
   .glow-button:hover {
-    box-shadow: 0 0 30px hsl(var(--primary) / 0.6), 0 0 80px hsl(var(--primary) / 0.2);
+    box-shadow: 0 5px 15px hsl(var(--primary) / 0.2);
   }
 
   .glow-orange {
@@ -133,10 +132,7 @@
   border-radius: 3px;
 }
 
-/* Grid pattern for hero */
+/* Grid pattern for hero (removed as per request) */
 .grid-pattern {
-  background-image: 
-    linear-gradient(hsl(var(--primary) / 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(var(--primary) / 0.05) 1px, transparent 1px);
-  background-size: 60px 60px;
+  background: none;
 }

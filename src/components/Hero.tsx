@@ -72,7 +72,7 @@ const Hero = () => {
 
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight mb-6">
-              <span className="text-primary">FIXFORGE</span>
+              Agentic AI development from prototype to <span className="text-primary">production</span>
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-lg mb-8 leading-relaxed">
