@@ -16,7 +16,7 @@ import {
   Copy,
   RotateCcw,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Select,
   SelectContent,
