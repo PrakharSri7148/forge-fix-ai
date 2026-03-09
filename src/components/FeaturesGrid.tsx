@@ -35,7 +35,7 @@ const FeaturesGrid = () => {
           <p className="text-muted-foreground text-lg max-w-lg mx-auto">Everything you need to write better code, faster.</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {features.map((f, i) => (
             <motion.div
               key={i}
@@ -43,13 +43,25 @@ const FeaturesGrid = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.07 }}
-              className="glass-card p-6 group"
+              className="glass-card overflow-hidden group flex flex-col"
             >
-              <div className="w-11 h-11 mb-4 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <f.icon className="w-5 h-5 text-primary" />
+              <div className="h-48 overflow-hidden relative">
+                <div className="absolute inset-0 bg-primary/20 mix-blend-overlay z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <img 
+                  src={f.img} 
+                  alt={f.title} 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
               </div>
-              <h3 className="text-base font-bold mb-2">{f.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              <div className="p-6 flex-1 flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                    <f.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold">{f.title}</h3>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed flex-1">{f.desc}</p>
+              </div>
             </motion.div>
           ))}
         </div>

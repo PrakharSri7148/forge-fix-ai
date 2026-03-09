@@ -132,10 +132,7 @@
   border-radius: 3px;
 }
 
-/* Grid pattern for hero */
+/* Grid pattern for hero (removed as per request) */
 .grid-pattern {
-  background-image: 
-    linear-gradient(hsl(var(--primary) / 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(var(--primary) / 0.05) 1px, transparent 1px);
-  background-size: 60px 60px;
+  background: none;
 }

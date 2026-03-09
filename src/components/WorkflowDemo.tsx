@@ -88,9 +88,9 @@ const WorkflowDemo = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-3xl mx-auto"
+          className="w-full max-w-[95vw] mx-auto"
         >
-          <div className="glass-card p-0 overflow-hidden">
+          <div className="glass-card p-0 overflow-hidden w-full">
             {/* Top bar */}
             <div className="flex items-center gap-3 px-5 py-3 border-b border-border/50">
               <div className="flex items-center gap-1.5">
