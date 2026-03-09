@@ -71,7 +71,7 @@ const Hero = () => {
 
 
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight mb-6">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold leading-[1.1] tracking-tight mb-6">
               Agentic AI development from prototype to <span className="text-primary">production</span>
             </h1>
 
