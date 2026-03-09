@@ -80,6 +80,7 @@ function mockAnalyze(code: string): AnalysisResult {
 
 const Analyzer = () => {
   const navigate = useNavigate();
+  const { id: urlId } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [language, setLanguage] = useState("");
   const [code, setCode] = useState("");
@@ -91,11 +92,29 @@ const Analyzer = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
+  // When URL changes, load the conversation or reset
+  useEffect(() => {
+    if (urlId) {
+      const conv = conversations.find((c) => c.id === urlId);
+      if (conv) {
+        setCode(conv.code);
+        setLanguage(conv.language);
+        setResult(conv.result);
+        setActiveId(conv.id);
+        return;
+      }
+    }
+    // No id or not found = fresh state
+    if (!urlId) {
+      setCode("");
+      setLanguage("");
+      setResult(null);
+      setActiveId(null);
+    }
+  }, [urlId]);
+
   const handleNewChat = () => {
-    setCode("");
-    setLanguage("");
-    setResult(null);
-    setActiveId(null);
+    navigate("/analyzer");
   };
 
   const handleAnalyze = async () => {
@@ -122,15 +141,13 @@ const Analyzer = () => {
     const conv: Conversation = { id, title, language, code, result: analysisResult, timestamp: new Date() };
     setConversations((prev) => [conv, ...prev]);
     setActiveId(id);
+    navigate(`/analyzer/${id}`, { replace: true });
 
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   };
 
   const loadConversation = (conv: Conversation) => {
-    setCode(conv.code);
-    setLanguage(conv.language);
-    setResult(conv.result);
-    setActiveId(conv.id);
+    navigate(`/analyzer/${conv.id}`);
   };
 
   const deleteConversation = (id: string, e: React.MouseEvent) => {
