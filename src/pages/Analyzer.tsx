@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import fixforgeLogo from "@/assets/fixforge-logo.png";
+import fixforgeIcon from "@/assets/fixforge-icon.png";
 
 const languages = [
   "JavaScript", "TypeScript", "Python", "Java", "C++", "C#", "Go", "Rust", "Ruby", "PHP", "Swift", "Kotlin",
@@ -178,8 +178,7 @@ const Analyzer = () => {
             {/* Sidebar header */}
             <div className="p-3 border-b border-border/30 flex items-center justify-between">
               <button onClick={() => navigate("/")} className="flex items-center gap-2">
-                <img src={fixforgeLogo} alt="FixForge" className="w-7 h-7" />
-                <span className="text-sm font-extrabold tracking-tight">FIXFORGE</span>
+                <img src={fixforgeIcon} alt="FixForge" className="w-8 h-8 rounded-lg" />
               </button>
               <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors">
                 <PanelLeftClose className="w-4 h-4" />
