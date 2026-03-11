@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -15,6 +15,13 @@ import {
   Zap,
   Copy,
   RotateCcw,
+  Upload,
+  FileText,
+  Image as ImageIcon,
+  X,
+  Hammer,
+  Github,
+  Twitter,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -46,7 +53,6 @@ type Conversation = {
   timestamp: Date;
 };
 
-// Mock analysis
 function mockAnalyze(code: string): AnalysisResult {
   const lines = code.split("\n");
   const errors: AnalysisResult["errors"] = [];
@@ -89,10 +95,11 @@ const Analyzer = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [typingLine, setTypingLine] = useState(-1);
+  const [dragOver, setDragOver] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // When URL changes, load the conversation or reset
   useEffect(() => {
     if (urlId) {
       const conv = conversations.find((c) => c.id === urlId);
@@ -104,7 +111,6 @@ const Analyzer = () => {
         return;
       }
     }
-    // No id or not found = fresh state
     if (!urlId) {
       setCode("");
       setLanguage("");
@@ -113,16 +119,50 @@ const Analyzer = () => {
     }
   }, [urlId]);
 
-  const handleNewChat = () => {
-    navigate("/analyzer");
-  };
+  const handleNewChat = () => navigate("/analyzer");
+
+  const handleFileUpload = useCallback(async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    for (const file of Array.from(files)) {
+      if (file.type.startsWith("image/")) {
+        // For images, we'd normally OCR — here we show a placeholder message
+        const imageText = `// [Image uploaded: ${file.name}]\n// FixForge is extracting code from this image...\n// Extracted code will appear here.\n`;
+        setCode((prev) => (prev ? prev + "\n" + imageText : imageText));
+      } else {
+        // Text-based files
+        try {
+          const text = await file.text();
+          setCode((prev) => (prev ? prev + "\n" + text : text));
+
+          // Auto-detect language from extension
+          const ext = file.name.split(".").pop()?.toLowerCase();
+          const langMap: Record<string, string> = {
+            js: "javascript", ts: "typescript", py: "python", java: "java",
+            cpp: "c++", cs: "c#", go: "go", rs: "rust", rb: "ruby",
+            php: "php", swift: "swift", kt: "kotlin",
+          };
+          if (ext && langMap[ext] && !language) {
+            setLanguage(langMap[ext]);
+          }
+        } catch {
+          console.error("Failed to read file:", file.name);
+        }
+      }
+    }
+  }, [language]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    handleFileUpload(e.dataTransfer.files);
+  }, [handleFileUpload]);
 
   const handleAnalyze = async () => {
     if (!code || !language) return;
     setAnalyzing(true);
     setResult(null);
 
-    // Simulate analysis with animated steps
     await new Promise((r) => setTimeout(r, 800));
     setTypingLine(0);
     await new Promise((r) => setTimeout(r, 600));
@@ -146,9 +186,7 @@ const Analyzer = () => {
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   };
 
-  const loadConversation = (conv: Conversation) => {
-    navigate(`/analyzer/${conv.id}`);
-  };
+  const loadConversation = (conv: Conversation) => navigate(`/analyzer/${conv.id}`);
 
   const deleteConversation = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -163,234 +201,288 @@ const Analyzer = () => {
 
   const scoreColor = (s: number) => (s >= 80 ? "text-green-400" : s >= 60 ? "text-yellow-400" : "text-destructive");
 
+  const codeLines = code ? code.split("\n") : [""];
+
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
-      {/* ── Sidebar ── */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.aside
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 280, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="h-screen sticky top-0 border-r border-border/40 bg-card/50 backdrop-blur-xl flex flex-col overflow-hidden shrink-0"
-          >
-            {/* Sidebar header */}
-            <div className="p-3 border-b border-border/30 flex items-center justify-between">
-              <button onClick={() => navigate("/")} className="flex items-center gap-2">
-                <img src={fixforgeIcon} alt="FixForge" className="w-8 h-8 rounded-lg" />
-              </button>
-              <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors">
-                <PanelLeftClose className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* New chat button */}
-            <div className="p-3">
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleNewChat}
-                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border/50 hover:border-primary/40 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                New Analysis
-              </motion.button>
-            </div>
-
-            {/* Conversation list */}
-            <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-0.5">
-              {conversations.length === 0 ? (
-                <div className="text-center py-10 px-4">
-                  <Code2 className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-xs text-muted-foreground/50">No analyses yet</p>
-                </div>
-              ) : (
-                conversations.map((conv) => (
-                  <motion.button
-                    key={conv.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    onClick={() => loadConversation(conv)}
-                    className={`w-full group flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
-                      activeId === conv.id ? "bg-primary/10 text-foreground" : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                    }`}
-                  >
-                    <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate flex-1">{conv.title}</span>
-                    <button
-                      onClick={(e) => deleteConversation(conv.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/20 hover:text-destructive transition-all"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </motion.button>
-                ))
-              )}
-            </div>
-
-            {/* Sidebar footer */}
-            <div className="p-3 border-t border-border/30">
-              <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground/40 uppercase tracking-widest">
-                <Zap className="w-3 h-3" /> Powered by FixForge AI
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <div className="flex flex-1">
+        {/* ── Sidebar ── */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.aside
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 280, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="h-screen sticky top-0 border-r border-border/40 bg-card/50 backdrop-blur-xl flex flex-col overflow-hidden shrink-0"
+            >
+              <div className="p-3 border-b border-border/30 flex items-center justify-between">
+                <button onClick={() => navigate("/")} className="flex items-center gap-2">
+                  <img src={fixforgeIcon} alt="FixForge" className="w-8 h-8 rounded-lg" />
+                </button>
+                <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors">
+                  <PanelLeftClose className="w-4 h-4" />
+                </button>
               </div>
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
 
-      {/* ── Main content ── */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
-        {/* Top bar */}
-        <div className="sticky top-0 z-20 border-b border-border/30 bg-background/80 backdrop-blur-xl px-4 py-2.5 flex items-center gap-3">
-          {!sidebarOpen && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              onClick={() => setSidebarOpen(true)}
-              className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors"
-            >
-              <PanelLeft className="w-4 h-4" />
-            </motion.button>
+              <div className="p-3">
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleNewChat}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border/50 hover:border-primary/40 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Analysis
+                </motion.button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-0.5">
+                {conversations.length === 0 ? (
+                  <div className="text-center py-10 px-4">
+                    <Code2 className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-xs text-muted-foreground/50">No analyses yet</p>
+                  </div>
+                ) : (
+                  conversations.map((conv) => (
+                    <motion.button
+                      key={conv.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      onClick={() => loadConversation(conv)}
+                      className={`w-full group flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
+                        activeId === conv.id ? "bg-primary/10 text-foreground" : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                      }`}
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate flex-1">{conv.title}</span>
+                      <button
+                        onClick={(e) => deleteConversation(conv.id, e)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/20 hover:text-destructive transition-all"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </motion.button>
+                  ))
+                )}
+              </div>
+
+              <div className="p-3 border-t border-border/30">
+                <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground/40 uppercase tracking-widest">
+                  <Zap className="w-3 h-3" /> Powered by FixForge AI
+                </div>
+              </div>
+            </motion.aside>
           )}
-          <button onClick={() => navigate("/")} className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <span className="text-sm font-mono text-muted-foreground">
-            {language ? `${language} analysis` : "New analysis"}
-          </span>
-        </div>
+        </AnimatePresence>
 
-        {/* Editor area */}
-        <div className="flex-1 flex flex-col items-center px-4 md:px-8 py-8 max-w-4xl mx-auto w-full">
-          {/* Welcome state when empty */}
-          {!code && !result && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-16"
-            >
-              <motion.div
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Sparkles className="w-12 h-12 text-primary/40 mx-auto mb-4" />
-              </motion.div>
-              <h2 className="text-2xl font-bold mb-2">What would you like to analyze?</h2>
-              <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                Select a language and paste your code below. FixForge will detect errors, suggest fixes, and rate your code quality.
-              </p>
-            </motion.div>
-          )}
-
-          {/* Language selector */}
+        {/* ── Main content ── */}
+        <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
+          {/* Full-screen code editor */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="w-full mb-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex-1 flex flex-col"
           >
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger className="w-full max-w-xs bg-card/60 backdrop-blur-xl border-border/50 font-mono text-sm">
-                <SelectValue placeholder="Select language..." />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border/50 backdrop-blur-xl">
-                {languages.map((lang) => (
-                  <SelectItem key={lang} value={lang.toLowerCase()} className="font-mono">
-                    {lang}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </motion.div>
-
-          {/* Code editor card */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="w-full glass-card p-0 overflow-hidden"
-          >
-            {/* Editor toolbar */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/30">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
-                <span className="ml-3 text-[11px] font-mono text-muted-foreground/60">
+            {/* Editor header bar — window dots + file name + language selector + actions */}
+            <div className="sticky top-0 z-20 border-b border-border/30 bg-card/80 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {!sidebarOpen && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    onClick={() => setSidebarOpen(true)}
+                    className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors"
+                  >
+                    <PanelLeft className="w-4 h-4" />
+                  </motion.button>
+                )}
+                <button onClick={() => navigate("/")} className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors">
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground/60">
                   {language ? `code.${getFileExt(language)}` : "untitled"} — FixForge
                 </span>
               </div>
-              <div className="flex items-center gap-1">
+
+              <div className="flex items-center gap-2">
+                {/* Upload buttons */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".js,.ts,.py,.java,.cpp,.cs,.go,.rs,.rb,.php,.swift,.kt,.txt,.json,.html,.css,.jsx,.tsx,image/*"
+                  multiple
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                  className="hidden"
+                />
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/40 transition-colors"
+                  title="Upload file or image"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload
+                </motion.button>
+
                 {code && (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    onClick={() => navigator.clipboard.writeText(code)}
-                    className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-                    title="Copy code"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                  </motion.button>
+                  <>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(code)}
+                      className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      title="Copy code"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => { setCode(""); setResult(null); }}
+                      className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      title="Clear"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  </>
                 )}
-                {code && (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    onClick={() => { setCode(""); setResult(null); }}
-                    className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-                    title="Clear"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                  </motion.button>
-                )}
+
+                {/* Language selector in header */}
+                <Select value={language} onValueChange={setLanguage}>
+                  <SelectTrigger className="w-36 h-8 bg-muted/30 border-border/40 font-mono text-xs">
+                    <SelectValue placeholder="Language..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border/50 backdrop-blur-xl">
+                    {languages.map((lang) => (
+                      <SelectItem key={lang} value={lang.toLowerCase()} className="font-mono text-xs">
+                        {lang}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Line-numbered editor */}
-            <div className="relative">
-              <textarea
-                ref={textareaRef}
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="Paste your code here..."
-                spellCheck={false}
-                className="w-full min-h-[300px] bg-transparent p-5 pl-14 font-mono text-sm leading-7 text-foreground placeholder:text-muted-foreground/30 resize-none focus:outline-none"
-              />
-              {/* Line numbers */}
-              {code && (
-                <div className="absolute top-5 left-4 select-none pointer-events-none">
-                  {code.split("\n").map((_, i) => (
-                    <div key={i} className="h-7 text-xs font-mono text-muted-foreground/30 text-right w-6">
+            {/* Full-screen editor with line numbers */}
+            <div
+              className={`flex-1 relative transition-colors ${dragOver ? "bg-primary/5 ring-2 ring-primary/30 ring-inset" : ""}`}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+            >
+              {/* Drag overlay */}
+              <AnimatePresence>
+                {dragOver && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+                  >
+                    <div className="flex flex-col items-center gap-3 text-primary">
+                      <Upload className="w-12 h-12" />
+                      <p className="text-lg font-bold">Drop files here</p>
+                      <p className="text-sm text-muted-foreground">Code files or images with code</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Welcome state */}
+              {!code && !result && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                >
+                  <div className="text-center pointer-events-auto">
+                    <motion.div
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <Sparkles className="w-12 h-12 text-primary/30 mx-auto mb-4" />
+                    </motion.div>
+                    <h2 className="text-2xl font-bold mb-2">What would you like to analyze?</h2>
+                    <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">
+                      Paste your code, drag & drop files, or upload images with code.
+                    </p>
+                    <div className="flex items-center justify-center gap-3">
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => textareaRef.current?.focus()}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border/50 hover:border-primary/40 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Code2 className="w-4 h-4" /> Paste Code
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border/50 hover:border-primary/40 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Upload className="w-4 h-4" /> Upload File
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Line-numbered full-screen editor */}
+              <div className="flex min-h-[calc(100vh-52px)]">
+                {/* Line numbers gutter */}
+                <div className="select-none bg-muted/10 border-r border-border/20 pt-4 pb-4 px-2 text-right min-w-[3.5rem] shrink-0">
+                  {codeLines.map((_, i) => (
+                    <div key={i} className="h-7 text-xs font-mono text-muted-foreground/30 leading-7 pr-2">
                       {i + 1}
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          </motion.div>
 
-          {/* Analyze button */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="w-full mt-4 flex justify-end"
-          >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={!code || !language || analyzing}
-              onClick={handleAnalyze}
-              className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-bold rounded-lg text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-            >
-              {analyzing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Sparkles className="w-4 h-4" />
-              )}
-              {analyzing ? "Analyzing..." : "Analyze Code"}
-            </motion.button>
+                {/* Textarea */}
+                <textarea
+                  ref={textareaRef}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder={code ? "" : "Paste your code here..."}
+                  spellCheck={false}
+                  className="flex-1 bg-transparent p-4 font-mono text-sm leading-7 text-foreground placeholder:text-muted-foreground/20 resize-none focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Bottom action bar */}
+            <div className="sticky bottom-0 z-20 border-t border-border/30 bg-card/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3 text-xs font-mono text-muted-foreground/50">
+                <span>{codeLines.length} lines</span>
+                <span>·</span>
+                <span>{code.length} chars</span>
+                {language && (
+                  <>
+                    <span>·</span>
+                    <span className="text-primary/60">{language}</span>
+                  </>
+                )}
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                disabled={!code || !language || analyzing}
+                onClick={handleAnalyze}
+                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground font-bold rounded-lg text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                {analyzing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+                {analyzing ? "Analyzing..." : "Analyze Code"}
+              </motion.button>
+            </div>
           </motion.div>
 
           {/* Analysis progress animation */}
@@ -400,7 +492,7 @@ const Analyzer = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="w-full mt-8 space-y-3"
+                className="px-4 md:px-8 py-8 max-w-4xl mx-auto w-full space-y-3"
               >
                 {["Parsing code structure...", "Running error detection...", "Generating suggestions..."].map((step, i) => (
                   <motion.div
@@ -434,7 +526,7 @@ const Analyzer = () => {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="w-full mt-8 space-y-5"
+                className="px-4 md:px-8 py-8 max-w-4xl mx-auto w-full space-y-5"
               >
                 {/* Score card */}
                 <motion.div
@@ -456,7 +548,7 @@ const Analyzer = () => {
                   </div>
                 </motion.div>
 
-                {/* Score bar animation */}
+                {/* Score bar */}
                 <div className="glass-card p-5">
                   <div className="w-full h-2 rounded-full bg-muted/30 overflow-hidden">
                     <motion.div
@@ -537,8 +629,39 @@ const Analyzer = () => {
             )}
           </AnimatePresence>
 
-          {/* Bottom spacer */}
-          <div className="h-16" />
+          {/* ── Footer ── */}
+          <footer className="border-t border-border/50 py-12 mt-auto">
+            <div className="container mx-auto px-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <Hammer className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="font-bold text-lg">FixForge</span>
+                </div>
+
+                <nav className="flex gap-8 text-sm text-muted-foreground">
+                  <a href="#" className="hover:text-foreground transition-colors">Features</a>
+                  <a href="#" className="hover:text-foreground transition-colors">Docs</a>
+                  <a href="#" className="hover:text-foreground transition-colors">Pricing</a>
+                  <a href="#" className="hover:text-foreground transition-colors">Blog</a>
+                </nav>
+
+                <div className="flex gap-4">
+                  <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                    <Github className="w-5 h-5" />
+                  </a>
+                  <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                    <Twitter className="w-5 h-5" />
+                  </a>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-border/30 text-center">
+                <p className="text-xs text-muted-foreground font-mono">© 2026 FixForge. Built for developers who ship.</p>
+              </div>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
