@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import fixforgeLogo from "@/assets/fixforge-logo.png";
+import fixforgeIcon from "@/assets/fixforge-icon.png";
 
 const languages = [
   "JavaScript", "TypeScript", "Python", "Java", "C++", "C#", "Go", "Rust", "Ruby", "PHP", "Swift", "Kotlin",
